@@ -19,6 +19,28 @@ static struct proc_dir_entry* entry;
 static int* history_buf = NULL;
 static int history_len = 0;
 
+static int my_open(struct inode *i, struct file *f);
+static int my_close(struct inode *i, struct file *f);
+static ssize_t my_read(struct file *f, char __user *buf, size_t len, loff_t *off);
+static ssize_t my_write(struct file *f, const char __user *buf,  size_t len, loff_t *off);
+static ssize_t proc_write(struct file *file, const char __user * ubuf, size_t count, loff_t* ppos);
+static ssize_t proc_read(struct file *file, char __user * ubuf, size_t count, loff_t* ppos);
+
+static struct file_operations mychdev_fops =
+{
+  .owner = THIS_MODULE,
+  .open = my_open,
+  .release = my_close,
+  .read = my_read,
+  .write = my_write
+};
+
+static struct file_operations fops = {
+  .owner = THIS_MODULE,
+  .read = proc_read,
+  .write = proc_write,
+};
+
 static void int_to_str(int int_num, char* char_num, char end_char)
 {
 	char n;
@@ -43,6 +65,7 @@ static void int_to_str(int int_num, char* char_num, char end_char)
         }
         char_num[11] = end_char;
 }
+
 static int str_sum(char* iterator, size_t len){
 	int sign = 0;
 	int n = 0;
@@ -102,6 +125,7 @@ static ssize_t my_read(struct file *f, char __user *buf, size_t len, loff_t *off
 
 static ssize_t my_write(struct file *f, const char __user *buf,  size_t len, loff_t *off)
 {
+	char* rename_cmd = "rename_log";
 	char* input_buf = NULL;
 	int* new_buf = NULL;
 	int sum;
@@ -115,6 +139,27 @@ static ssize_t my_write(struct file *f, const char __user *buf,  size_t len, lof
 	{
 		return -EFAULT;
 	}
+	
+	if(strncmp(rename_cmd, input_buf, strlen(rename_cmd)) == 0)
+	{
+		char* file_name = (char*) kmalloc(len-strlen(rename_cmd)-1, GFP_KERNEL);
+		sscanf(input_buf, "rename_log %s", file_name);
+
+		proc_remove(entry);
+		entry = proc_create(file_name, 0444, NULL, &fops);
+		if(entry == NULL)
+		{
+			printk(KERN_ERR "/Device: failed to rename log file to \"%s\"", file_name);
+			return -ENOMEM;
+		}
+		kfree(file_name);
+		kfree(input_buf);
+		kfree(history_buf);
+		history_buf = NULL;
+		history_len = 0;
+		return len;
+	}
+
    	sum = str_sum(input_buf, len);
 	kfree(input_buf);
     	input_buf = NULL;
@@ -161,21 +206,6 @@ static ssize_t proc_read(struct file *file, char __user * ubuf, size_t count, lo
       	return len;
 }
 
-static struct file_operations mychdev_fops =
-{
-  .owner = THIS_MODULE,
-  .open = my_open,
-  .release = my_close,
-  .read = my_read,
-  .write = my_write
-};
-
-static struct file_operations fops = {
-  .owner = THIS_MODULE,
-  .read = proc_read,
-  .write = proc_write,
-};
- 
 static int __init ch_drv_init(void)
 {
     printk(KERN_INFO "Hello!\n");
