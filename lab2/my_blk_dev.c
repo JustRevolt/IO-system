@@ -10,7 +10,7 @@
 #include <linux/string.h>
 
 
-#define MEMSIZE 0xF000 // Size of Ram disk in sectors
+#define MEMSIZE 0x19000 // Size of Ram disk in sectors (50 Mbyte = 102400 sec = 0x19000)
 int c = 0; //Variable for Major Number 
 
 #define SECTOR_SIZE 512
@@ -68,7 +68,7 @@ static PartTable def_part_table =
 		end_sec: 0x20,
 		end_cyl: 0x9F,
 		abs_start_sec: 0x1,
-		sec_in_part: 0x4FFF // 10Mbyte
+		sec_in_part: 0xF000 // 10Mbyte
 	},
 	{
 		boot_type: 0x00,
@@ -79,11 +79,11 @@ static PartTable def_part_table =
 		end_sec: 0x20,
 		end_head: 0xB,
 		end_cyl: 0x9F,
-		abs_start_sec: 0x5000,
+		abs_start_sec: 0xF001,
 		sec_in_part: 0xA000
 	}
 };
-static unsigned int def_log_part_br_abs_start_sector[] = {0x5000, 0xA000};
+static unsigned int def_log_part_br_abs_start_sector[] = {0xF001, 0x14002};
 static const PartTable def_log_part_table[] =
 {
 	{
@@ -97,7 +97,7 @@ static const PartTable def_log_part_table[] =
 			end_sec: 0x20,
 			end_cyl: 0x9F,
 			abs_start_sec: 0x1,
-			sec_in_part: 0x4FFF
+			sec_in_part: 0x5000
 		},
 		{
 			boot_type: 0x00,
@@ -108,7 +108,7 @@ static const PartTable def_log_part_table[] =
 			end_head: 0xB,
 			end_sec: 0x20,
 			end_cyl: 0x9F,
-			abs_start_sec: 0x5000,
+			abs_start_sec: 0x5001,
 			sec_in_part: 0x5000
 		}
 	},
@@ -123,7 +123,7 @@ static const PartTable def_log_part_table[] =
 			end_sec: 0x20,
 			end_cyl: 0x9F,
 			abs_start_sec: 0x1,
-			sec_in_part: 0x4FFF
+			sec_in_part: 0x5000
 		}
 	}
 };
@@ -247,6 +247,7 @@ static int rb_transfer(struct request *req)
 	}
 	return ret;
 }
+
 /** request handling function**/
 static void dev_request(struct request_queue *q)
 {
@@ -262,7 +263,6 @@ static void dev_request(struct request_queue *q)
 
 void device_setup(void)
 {
-	mydisk_init();
 	c = register_blkdev(c, "mydisk");// major no. allocation
 	printk(KERN_ALERT "Major Number is : %d",c);
 	spin_lock_init(&device.lock); // lock for queue
@@ -308,5 +308,5 @@ void __exit mydiskdrive_exit(void)
 module_init(mydiskdrive_init);
 module_exit(mydiskdrive_exit);
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Author");
+MODULE_AUTHOR("Tabunshik Sergey");
 MODULE_DESCRIPTION("BLOCK DRIVER");
