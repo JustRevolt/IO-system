@@ -1,0 +1,17 @@
+root@user-VirtualBox:/home/user/IOsystem-labs/lab2# ./speed_benchmark mydisk5 mydisk6
+/dev/mydisk5->/dev/mydisk5 Time:0.0279000700 s, Speed:42.14 MB/s
+/dev/mydisk5->/dev/mydisk6 Time:0.0253471800 s, Speed:46.29 MB/s
+/dev/mydisk6->/dev/mydisk5 Time:0.0272595400 s, Speed:42.08 MB/s
+/dev/mydisk6->/dev/mydisk6 Time:0.0305916900 s, Speed:37.94 MB/s
+root@user-VirtualBox:/home/user/IOsystem-labs/lab2# ./speed_benchmark sda1 mydisk1
+/dev/sda1->/dev/sda1 Time:0.0449291900 s, Speed:27.40 MB/s
+/dev/sda1->/dev/mydisk1 Time:0.0177806400 s, Speed:61.51 MB/s
+/dev/mydisk1->/dev/sda1 Time:0.0731654800 s, Speed:15.17 MB/s
+/dev/mydisk1->/dev/mydisk1 Time:0.0284069100 s, Speed:45.80 MB/s
+root@user-VirtualBox:/home/user/IOsystem-labs/lab2# ./speed_benchmark mydisk5 mydisk1
+/dev/mydisk5->/dev/mydisk5 Time:0.0299601600 s, Speed:38.74 MB/s
+/dev/mydisk5->/dev/mydisk1 Time:0.0257923400 s, Speed:44.12 MB/s
+/dev/mydisk1->/dev/mydisk5 Time:0.0245096500 s, Speed:45.76 MB/s
+/dev/mydisk1->/dev/mydisk1 Time:0.0252034800 s, Speed:50.13 MB/s
+root@user-VirtualBox:/home/user/IOsystem-labs/lab2# 
+
