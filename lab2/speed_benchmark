@@ -1,0 +1,61 @@
+#!/bin/bash
+
+test_size=1M
+
+for disk in $*
+do
+	mkdir "/mnt/$disk"
+	mount "/dev/$disk" "/mnt/$disk"
+done
+
+for disk_1 in $*
+do
+	for disk_2 in $*
+	do
+		dev_1="/dev/$disk_1"
+		dev_2="/dev/$disk_2"
+		path_1="/mnt/$disk_1/speedtest1"
+		path_2="/mnt/$disk_2/speedtest2"
+		fallocate -l $test_size "$path_1"
+		fallocate -l $test_size "$path_2"
+		speed_sum=0.0
+		speed_metric=
+		time_sum=0.0
+		time_metric=
+		for i in 1 2 3 4 5 6 7 8 9 10
+		do
+			x=$(dd if="$path_1" of="$path_2" 2>&1 | tail -n 1)
+			mv_time=$(grep -o '[0-9]*,[0-9]*e*-*[0-9]* [[:alpha:]]*s' <<<$x | sed 's/,/./g')
+			mv_speed=$(grep -o '[0-9]*,[0-9]* [[:alpha:]]*B/s' <<< $x | sed 's/,/./g')
+
+			speed_metric=$(grep -o '[[:alpha:]/]*$' <<< $mv_speed)
+			time_metric=$(grep -o '[[:alpha:]]*$' <<< $mv_time)
+
+			mv_time=$(grep -o '^[-0-9e.]*' <<< $mv_time)
+			mv_speed=$(grep -o '^[0-9.]*' <<< $mv_speed)
+			echo -n $' \r'	
+			speed_sum=$(echo "$mv_speed+$speed_sum" | bc)
+			exp=$(grep -o 'e-' <<< $mv_time)
+			if [[ -n $exp ]]
+			then
+				doub=$(grep -o '^[0-9.]*' <<< $mv_time)
+				pow=$(grep -o '[0-9]*$' <<< $mv_time)
+				mv_time=$(echo "$doub/(10^$pow)" | bc)
+			fi
+			time_sum=$(echo "$time_sum+$mv_time" | bc)
+		done
+		mv_speed=$( echo "scale=2; $speed_sum/10;" | bc -l)
+		mv_time=$( echo "scale=10; $time_sum/10;" | bc -l)
+
+		echo "$dev_1->$dev_2 Time:0$mv_time $time_metric, Speed:$mv_speed $speed_metric"
+
+		rm $path_1
+		rm $path_2
+	done
+done
+
+for disk in $*
+do
+	umount "/mnt/$disk"
+	rmdir "/mnt/$disk"
+done
